@@ -2,9 +2,8 @@ package com.example.model
 
 import kotlinx.serialization.Serializable
 
-
 @Serializable
-data class TaskDTO(
+data class Task(
     val id: Int,
     val title: String,
     val description: String? = null,

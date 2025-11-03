@@ -8,7 +8,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.concurrent.CopyOnWriteArrayList
 
-val tasks = CopyOnWriteArrayList<TaskDTO>()
+// по идее можно просто ArrayList использовать
+// но лучше не надо
+val tasks = CopyOnWriteArrayList<Task>()
 var nextId = 1
 
 fun Application.configureRouting() {
@@ -19,7 +21,7 @@ fun Application.configureRouting() {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Title. I don't see it."))
                 return@post
             }
-            val newTask = TaskDTO(
+            val newTask = Task(
                 id = nextId++,
                 title = received.title,
                 description = received.description,
@@ -29,18 +31,25 @@ fun Application.configureRouting() {
             call.respond(HttpStatusCode.Created, newTask)
         }
         get("/tasks") {
-            val completedParam = call.request.queryParameters["completed"]?.toBooleanStrictOrNull()
-            val filtered = if (completedParam != null)
-                tasks.filter { it.completed == completedParam }
+            val completedParam = call.request.queryParameters["completed"]?.toBooleanStrictOrNull() // вот это кстати легендарная функция, точно стоила включения в стандартную библиотекку XD
+            val filtered = if (completedParam != null) tasks.filter {
+                it.completed == completedParam
+            }
             else tasks
 
             call.respond(filtered)
         }
         get("/tasks/{id}") {
             val id = call.parameters["id"]?.toIntOrNull()
-            val task = tasks.find { it.id == id }
-            if (task != null) call.respond(task)
-            else call.respond(HttpStatusCode.NotFound, mapOf("error" to "Task not found"))
+            val task = tasks.find {
+                it.id == id
+            }
+
+            if (task != null) {
+                call.respond(task)
+            } else {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Task not found"))
+            }
         }
         put("/tasks/{id}") {
             val id = call.parameters["id"]?.toIntOrNull()
@@ -63,7 +72,9 @@ fun Application.configureRouting() {
         delete("/tasks/{id}") {
             val id = call.parameters["id"]?.toIntOrNull()
             val removed = tasks.removeIf { it.id == id }
-            if (removed) call.respond(HttpStatusCode.NoContent)
+            if (removed) {
+                call.respond(HttpStatusCode.NoContent)
+            }
             else call.respond(HttpStatusCode.NotFound, mapOf("error" to "Task not found"))
         }
     }
